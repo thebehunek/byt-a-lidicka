@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Virtuální prohlídka – byt A</title>
+<meta name="description" content="Virtuální prohlídka 360° modelového bytu A, Lidická 1903/96, Břeclav. Vizualizace je ilustrační.">
+<meta name="color-scheme" content="light dark">
+<script>
+  // Testovací režim (?test=…): zachytí chyby a varování konzole pro kontrolní skript. Mimo test nic nedělá.
+  if (/[?&]test=/.test(location.search)) {
+    window.__chyby = [];
+    window.__varovani = [];
+    (function () {
+      var ce = console.error, cw = console.warn;
+      function txt(a) { return Array.prototype.map.call(a, function (x) { return x && x.message ? x.message : String(x); }).join(' '); }
+      console.error = function () { window.__chyby.push(txt(arguments)); return ce.apply(console, arguments); };
+      console.warn = function () { window.__varovani.push(txt(arguments)); return cw.apply(console, arguments); };
+      window.addEventListener('error', function (e) {
+        var t = e.target && e.target !== window && (e.target.src || e.target.href);
+        window.__chyby.push(t ? 'nenačteno: ' + t : 'výjimka: ' + e.message + (e.filename ? ' @' + e.filename + ':' + e.lineno : ''));
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        window.__chyby.push('promise: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      });
+    })();
+  }
+</script>
+<link rel="stylesheet" href="prohlidka.css">
+</head>
+<body>
+<div class="prohlidka" id="prohlidka">
+  <div class="pohled" id="pohled" tabindex="0" role="region"
+       aria-label="Panoráma 360°. Rozhlížejte se tažením nebo šipkami na klávesnici, přibližujte kolečkem nebo klávesami plus a minus."
+       aria-describedby="napoveda-kratka"></div>
+
+  <div class="hotspoty" id="hotspoty" aria-label="Průchody do dalších místností"></div>
+
+  <header class="hlavicka panel">
+    <p class="hlavicka-nad">Modelový byt A · Lidická 1903/96, Břeclav</p>
+    <h1 class="hlavicka-mistnost" id="mistnost">Virtuální prohlídka</h1>
+    <p class="hlavicka-pod"><span id="poradi">1 / 6</span><span class="tecka" aria-hidden="true">·</span>Virtuální prohlídka 360°</p>
+  </header>
+
+  <div class="nastroje">
+    <button type="button" class="tlacitko panel" id="btn-pudorys" aria-controls="minimapa" aria-expanded="true" title="Půdorys">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h9v6h7v10H4z M13 4v6 M4 13h6v7"/></svg>
+      <span class="sr-only">Zobrazit nebo skrýt půdorys</span>
+    </button>
+    <button type="button" class="tlacitko panel" id="btn-napoveda" aria-controls="napoveda" aria-expanded="false" title="Ovládání (klávesa ?)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6"/><circle cx="12" cy="17" r=".6" class="plne"/></svg>
+      <span class="sr-only">Ovládání prohlídky</span>
+    </button>
+    <button type="button" class="tlacitko panel" id="btn-cela" title="Celá obrazovka (klávesa F)" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="ikona-otevrit"><path d="M4 9V4h5 M15 4h5v5 M20 15v5h-5 M9 20H4v-5"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="ikona-zavrit"><path d="M9 4v5H4 M20 9h-5V4 M15 20v-5h5 M4 15h5v5"/></svg>
+      <span class="sr-only" id="btn-cela-text">Celá obrazovka</span>
+    </button>
+  </div>
+
+  <section class="minimapa panel" id="minimapa" aria-label="Půdorys bytu A">
+    <div class="minimapa-hlava">
+      <span>Půdorys</span>
+      <button type="button" class="minimapa-zvetsit" id="btn-mm-velikost" aria-pressed="false" title="Zvětšit půdorys">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6 M20 4l-7 7 M10 20H4v-6 M4 20l7-7"/></svg>
+        <span class="sr-only">Zvětšit půdorys</span>
+      </button>
+    </div>
+    <div class="minimapa-plocha" id="mm-plocha">
+      <img id="mm-obraz" alt="Půdorys bytu A s nábytkem" draggable="false">
+      <svg id="mm-kuzel" aria-hidden="true" focusable="false"></svg>
+      <div id="mm-uzly"></div>
+      <span class="mm-jste-zde" id="mm-jste-zde" aria-hidden="true">Jste zde</span>
+    </div>
+  </section>
+
+  <nav class="mistnosti" aria-label="Místnosti">
+    <ol id="mistnosti-seznam"></ol>
+  </nav>
+
+  <div class="zoom">
+    <button type="button" class="tlacitko panel" id="btn-plus" title="Přiblížit (+)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg><span class="sr-only">Přiblížit</span></button>
+    <button type="button" class="tlacitko panel" id="btn-minus" title="Oddálit (−)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><span class="sr-only">Oddálit</span></button>
+  </div>
+
+  <p class="poznamka">Vizualizace je ilustrační.</p>
+
+  <div class="tip" id="tip" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10 M12 9.5a1.5 1.5 0 0 1 3 0V11 M15 10.5a1.5 1.5 0 0 1 3 0V15a5 5 0 0 1-5 5h-1.2a5 5 0 0 1-4-2L4.6 14.4a1.4 1.4 0 0 1 2-2L9 14.5 M3 5h3 M3 5l1.5-1.5 M3 5l1.5 1.5"/></svg>
+    <span id="napoveda-kratka">Táhnutím se rozhlédněte. Šipky na podlaze vedou do dalších místností.</span>
+  </div>
+
+  <div class="napoveda panel" id="napoveda" role="dialog" aria-labelledby="napoveda-nadpis" hidden>
+    <div class="napoveda-hlava">
+      <h2 id="napoveda-nadpis">Ovládání</h2>
+      <button type="button" class="napoveda-zavrit" id="btn-napoveda-zavrit" title="Zavřít (Esc)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg><span class="sr-only">Zavřít</span>
+      </button>
+    </div>
+    <dl>
+      <dt>Rozhlédnout se</dt><dd>táhněte myší nebo prstem · klávesy <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></dd>
+      <dt>Přiblížit</dt><dd>kolečko myši · roztažení dvěma prsty · <kbd>+</kbd> <kbd>−</kbd></dd>
+      <dt>Do další místnosti</dt><dd>klepněte na šipku na podlaze · <kbd>Tab</kbd> vybere průchod, <kbd>Enter</kbd> do něj vejde</dd>
+      <dt>Skok do místnosti</dt><dd>bod v půdorysu nebo seznam dole · klávesy <kbd>1</kbd>–<kbd>6</kbd></dd>
+      <dt>Celá obrazovka</dt><dd><kbd>F</kbd> (není-li v prohlížeči dostupná, tlačítko se nezobrazí)</dd>
+    </dl>
+    <p class="napoveda-pozn">Modelový byt A (1.NP, 54,40 m²). Vybavení je návrh pro modelový byt, není součástí bytu. Vizualizace je ilustrační.</p>
+  </div>
+
+  <div class="zprava" id="zprava" role="status" aria-live="polite"></div>
+  <div class="sr-only" id="hlaseni" aria-live="polite"></div>
+
+  <div class="nacitani" id="nacitani">
+    <div class="nacitani-obsah">
+      <p class="nacitani-nad">Modelový byt A · Lidická 1903/96, Břeclav</p>
+      <p class="nacitani-nadpis">Virtuální prohlídka</p>
+      <div class="nacitani-pruh" aria-hidden="true"><span></span></div>
+      <p class="nacitani-text" id="nacitani-text">Načítám panoráma…</p>
+    </div>
+  </div>
+
+  <noscript><div class="chyba-obsah panel"><p>Prohlídka potřebuje zapnutý JavaScript.</p></div></noscript>
+</div>
+
+<script>
+  // Když se modul nespustí (např. soubor otevřený přímo z disku bez webového serveru), ukaž srozumitelnou zprávu.
+  window.__prohlidkaChyba = function (duvod) {
+    var n = document.getElementById('nacitani');
+    var t = document.getElementById('nacitani-text');
+    if (!n || !t) return;
+    n.classList.add('chyba');
+    t.textContent = duvod;
+  };
+  setTimeout(function () {
+    if (!window.__prohlidkaStart) {
+      window.__prohlidkaChyba(location.protocol === 'file:'
+        ? 'Prohlídku je potřeba otevřít přes webovou stránku. Prohlížeč ji z bezpečnostních důvodů nespustí přímo ze souboru na disku.'
+        : 'Prohlídku se nepodařilo spustit. Zkuste stránku načíst znovu.');
+    }
+  }, 6000);
+</script>
+<script type="module" src="prohlidka.js" onerror="window.__prohlidkaChyba(location.protocol === 'file:' ? 'Prohlídku je potřeba otevřít přes webovou stránku. Prohlížeč ji z bezpečnostních důvodů nespustí přímo ze souboru na disku.' : 'Prohlídku se nepodařilo načíst.')"></script>
+</body>
+</html>
